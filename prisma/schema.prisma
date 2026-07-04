@@ -1,0 +1,30 @@
+// Схема из PROJECT_BRIEF_SMENA.md. Живая БД (Neon Postgres) подключается в Сессии 2:
+// задать DATABASE_URL в .env и выполнить `npx prisma migrate dev`.
+// Игра (Сессия 1) работает без БД — контент читается из content/deviations.json.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String    @id @default(cuid())
+  name      String
+  pin       String
+  attempts  Attempt[]
+  createdAt DateTime  @default(now())
+}
+
+model Attempt {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  deviationId Int
+  causeOk     Boolean
+  actionOk    Boolean
+  createdAt   DateTime @default(now())
+}
