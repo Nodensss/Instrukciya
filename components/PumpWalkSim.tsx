@@ -270,6 +270,149 @@ export default function PumpWalkSim() {
       addBox(0.22, 3.4, 0.22, mDark, px, 1.7, -8.2);
       addBox(0.18, 0.18, 1.4, mDark, px, 3.35, -8.2);
     }
+    // кабельный лоток на эстакаде
+    addBox(30, 0.12, 0.45, mDark, 0, 2.55, -8.6);
+    for (let i = 0; i < 30; i++) addBox(0.05, 0.1, 0.5, mSteel, -14.5 + i, 2.62, -8.6);
+
+    // ================= ДОПОЛНИТЕЛЬНОЕ ОБОРУДОВАНИЕ (антураж) =================
+    // Всё ниже — декоративные объекты для «наполнения» установки, без интерактива.
+
+    // площадка-платформа с ограждением и лесенкой
+    function makePlatform(x: number, z: number, w: number, d: number, h: number) {
+      addBox(w, 0.12, d, mDark, x, h, z);
+      const railMat = mAmber;
+      const rail = (x1: number, z1: number, x2: number, z2: number) => {
+        const len = Math.hypot(x2 - x1, z2 - z1);
+        const mid = addBox(len, 0.05, 0.05, railMat, (x1 + x2) / 2, h + 1.0, (z1 + z2) / 2);
+        mid.rotation.y = Math.atan2(z2 - z1, x2 - x1);
+        const low = addBox(len, 0.05, 0.05, railMat, (x1 + x2) / 2, h + 0.5, (z1 + z2) / 2);
+        low.rotation.y = mid.rotation.y;
+      };
+      const hw = w / 2, hd = d / 2;
+      rail(x - hw, z - hd, x + hw, z - hd);
+      rail(x - hw, z + hd, x + hw, z + hd);
+      rail(x - hw, z - hd, x - hw, z + hd);
+      // стойки ограждения
+      for (const [cx, cz] of [[x - hw, z - hd], [x + hw, z - hd], [x - hw, z + hd], [x + hw, z + hd]] as const)
+        addBox(0.06, 1.05, 0.06, railMat, cx, h + 0.52, cz);
+      // лесенка (наклонные тетивы + ступени)
+      const st = new THREE.Group();
+      const steps = Math.max(2, Math.round(h / 0.28));
+      for (let i = 0; i < steps; i++) addBox(0.7, 0.04, 0.22, mSteel, 0, 0.28 * i + 0.14, i * 0.3, st);
+      st.position.set(x, 0, z + hd + 0.2);
+      scene.add(st);
+    }
+
+    // вертикальный аппарат (колонна/реактор) с юбкой и площадкой обслуживания
+    function makeColumn(x: number, z: number, r: number, hgt: number, tag: string) {
+      const g = new THREE.Group();
+      addCyl(r, r, hgt, 28, mSteel, 0, hgt / 2 + 0.6, 0, 0, g); // обечайка
+      addCyl(r * 0.6, r, 0.6, 28, mDark, 0, 0.3, 0, 0, g); // опорная юбка
+      addCyl(r, r, 0.18, 28, mAmber, 0, 1.0, 0, 0, g); // фланец
+      addCyl(r, r, 0.18, 28, mAmber, 0, hgt + 0.1, 0, 0, g); // верхний фланец
+      // кольцевая площадка обслуживания
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(r + 0.4, 0.05, 8, 28), mAmber);
+      ring.rotation.x = Math.PI / 2;
+      ring.position.y = hgt * 0.66;
+      g.add(ring);
+      // штуцера
+      addCyl(0.12, 0.12, 0.6, 10, mPipe, r + 0.2, hgt * 0.8, 0, Math.PI / 2, g);
+      addCyl(0.12, 0.12, 0.6, 10, mPipe, -(r + 0.2), hgt * 0.25, 0, Math.PI / 2, g);
+      g.position.set(x, 0, z);
+      scene.add(g);
+      const lb = makeLabelSprite(tag);
+      lb.position.set(x, hgt + 1.5, z);
+      scene.add(lb);
+    }
+    makeColumn(-6.5, -12.5, 1.3, 7.5, "Р-201 · РЕАКТОР");
+    makeColumn(-2.2, -12.8, 1.0, 6.2, "К-202 · КОЛОННА");
+    makeColumn(2.4, -12.6, 1.15, 6.8, "Р-203 · РЕАКТОР");
+    // площадки обслуживания у аппаратов
+    makePlatform(-4.3, -10.5, 3.2, 1.6, 1.3);
+    makePlatform(9.5, 5.5, 2.2, 2.2, 0.9);
+
+    // блок горизонтальных теплообменников/холодильников (слева)
+    const coolers = new THREE.Group();
+    for (let i = 0; i < 3; i++) {
+      addCyl(0.55, 0.55, 3.2, 20, mSteel, 0, 0.9 + i * 1.25, 0, Math.PI / 2, coolers);
+      addCyl(0.6, 0.6, 0.2, 20, mAmber, -1.5, 0.9 + i * 1.25, 0, Math.PI / 2, coolers);
+      addCyl(0.6, 0.6, 0.2, 20, mAmber, 1.5, 0.9 + i * 1.25, 0, Math.PI / 2, coolers);
+    }
+    addBox(0.25, 4.6, 1.3, mDark, -1.7, 2.3, 0, coolers); // опорная рама
+    addBox(0.25, 4.6, 1.3, mDark, 1.7, 2.3, 0, coolers);
+    coolers.position.set(-12.5, 0, 3.5);
+    scene.add(coolers);
+    const coolLabel = makeLabelSprite("А-503 · ХОЛОДИЛЬНИКИ");
+    coolLabel.position.set(-12.5, 5.0, 3.5);
+    scene.add(coolLabel);
+
+    // компрессорный агрегат (справа)
+    const comp = new THREE.Group();
+    addBox(4.4, 0.35, 2.2, mDark, 0, 0.18, 0, comp); // рама
+    addCyl(0.75, 0.75, 2.6, 24, mBlue, -0.7, 1.15, 0, Math.PI / 2, comp); // корпус компрессора
+    addCyl(0.55, 0.55, 1.4, 24, mSteel, 1.3, 1.15, 0, Math.PI / 2, comp); // привод
+    addBox(0.9, 0.9, 0.9, mDark, 1.5, 0.75, 0, comp); // редуктор
+    addCyl(0.14, 0.14, 1.6, 12, mPipe, -0.7, 2.2, 0, 0, comp); // патрубок вверх
+    addCyl(0.14, 0.14, 2.4, 12, mPipe, -0.7, 0.55, 1.3, Math.PI / 2, comp); // всас в пол
+    comp.position.set(11.5, 0, -3);
+    comp.rotation.y = -Math.PI / 2;
+    scene.add(comp);
+    const compLabel = makeLabelSprite("К-301 · КОМПРЕССОР");
+    compLabel.position.set(11.5, 3.4, -3);
+    scene.add(compLabel);
+
+    // ряд однотипных насосов (насосная аллея, справа вдоль z)
+    function makeAuxPump(x: number, z: number, tag: string) {
+      const g = new THREE.Group();
+      addBox(1.6, 0.22, 0.9, mDark, 0, 0.11, 0, g);
+      addCyl(0.32, 0.32, 0.5, 20, mRed, -0.4, 0.5, 0, Math.PI / 2, g);
+      addCyl(0.28, 0.28, 0.85, 20, mBlue, 0.35, 0.5, 0, Math.PI / 2, g);
+      addCyl(0.1, 0.1, 0.7, 10, mPipe, -0.4, 0.9, 0, 0, g);
+      g.position.set(x, 0, z);
+      scene.add(g);
+      const lb = makeLabelSprite(tag);
+      lb.position.set(x, 1.5, z);
+      scene.add(lb);
+    }
+    makeAuxPump(12.5, 5, "Н-316");
+    makeAuxPump(12.5, 8, "Н-322");
+    makeAuxPump(12.5, 11, "Н-325");
+
+    // кластер резервуаров за спиной старта
+    for (const [tx, tr, th, tag] of [
+      [-11, 1.6, 5.5, "Е-315"],
+      [-7.5, 1.3, 4.5, "Е-323"],
+    ] as const) {
+      addCyl(tr, tr, th, 28, mSteel, tx, th / 2, 13.5, 0);
+      addCyl(tr + 0.02, tr + 0.02, 0.22, 28, mAmber, tx, th - 0.5, 13.5, 0);
+      const lb = makeLabelSprite(tag);
+      lb.position.set(tx, th + 1.1, 13.5);
+      scene.add(lb);
+    }
+
+    // ограждение вокруг рабочей зоны насоса Н-101 (жёлто-чёрный контур обхода)
+    for (let a = 0; a < 24; a++) {
+      const ang = (a / 24) * Math.PI * 2;
+      // разрыв для прохода со стороны старта
+      if (Math.sin(ang) > 0.55) continue;
+      addBox(0.06, 0.9, 0.06, mAmber, Math.cos(ang) * 5.5, 0.45, Math.sin(ang) * 5.5 + 0.5);
+    }
+
+    // дополнительные технологические трубопроводы (эстакада → колонны)
+    addCyl(0.12, 0.12, 4.5, 12, mPipe, -6.5, 3.0, -10.3, 0);
+    addCyl(0.12, 0.12, 4.5, 12, mPipe, 2.4, 3.0, -10.3, 0);
+    addCyl(0.1, 0.1, 6, 12, mPipe, -9, 2.7, -5, Math.PI / 2);
+    addCyl(0.1, 0.1, 9, 12, mPipe, 7, 2.28, -4, 0);
+
+    // прожекторные мачты
+    for (const [mx, mz] of [[-13, -5], [13, 9]] as const) {
+      addBox(0.15, 6, 0.15, mDark, mx, 3, mz);
+      const lampHead = addBox(0.5, 0.25, 0.3, mSteel, mx, 6, mz);
+      lampHead.rotation.y = mx > 0 ? 0.5 : -0.5;
+      const spot = new THREE.PointLight(0xdfe9f2, 6, 22);
+      spot.position.set(mx, 6, mz);
+      scene.add(spot);
+    }
 
     // ---------- задвижки ----------
     function makeValve(tag: string, x: number, z: number, pipeY: number) {
@@ -551,6 +694,14 @@ export default function PumpWalkSim() {
       { x: 3.4, z: 0, r: 0.7 },   // ЗД-102
       { x: 3, z: 4.6, r: 0.95 },  // пульт
       { x: 1.15, z: 1.35, r: 0.55 }, // маслобак
+      // дополнительное оборудование
+      { x: -6.5, z: -12.5, r: 1.8 }, // Р-201
+      { x: -2.2, z: -12.8, r: 1.5 }, // К-202
+      { x: 2.4, z: -12.6, r: 1.7 },  // Р-203
+      { x: -12.5, z: 3.5, r: 2.2 },  // холодильники А-503
+      { x: 11.5, z: -3, r: 2.4 },    // компрессор К-301
+      { x: 12.5, z: 5, r: 1.0 }, { x: 12.5, z: 8, r: 1.0 }, { x: 12.5, z: 11, r: 1.0 }, // насосная аллея
+      { x: -11, z: 13.5, r: 1.8 }, { x: -7.5, z: 13.5, r: 1.5 }, // резервуары
     ];
 
     const onResize = () => {
@@ -588,9 +739,9 @@ export default function PumpWalkSim() {
           player.x += (mx * cos - mz * sin) * speed * dt;
           player.z += (mx * sin + mz * cos) * speed * dt;
         }
-        // границы площадки
-        player.x = Math.max(-13.5, Math.min(13.5, player.x));
-        player.z = Math.max(-7, Math.min(13.5, player.z));
+        // границы площадки (расширены под доп. оборудование)
+        player.x = Math.max(-15, Math.min(15, player.x));
+        player.z = Math.max(-10.5, Math.min(15, player.z));
         // выталкивание из оборудования
         for (const c of colliders) {
           const dx = player.x - c.x, dz = player.z - c.z;
