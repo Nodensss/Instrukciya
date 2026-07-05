@@ -46,6 +46,22 @@ export default function Home() {
         >
           МОДУЛЬ 1 · ДИСПЕТЧЕР ОТКЛОНЕНИЙ
         </Link>
+        <Link
+          href="/sim"
+          className="block w-full mt-3 py-4 text-center"
+          style={{
+            background: C.panel,
+            border: "1px solid " + C.line,
+            color: C.text,
+            borderRadius: 12,
+            fontWeight: 800,
+            letterSpacing: "0.12em",
+            fontSize: 15,
+          }}
+        >
+          3D-ОБХОД · ПУСК НАСОСА{" "}
+          <span style={{ ...mono, fontSize: 10, color: "#f0685e" }}>ДЕМО</span>
+        </Link>
         <div
           className="mt-6 p-3"
           style={{ background: C.panel, border: "1px solid " + C.line, borderRadius: 10 }}
