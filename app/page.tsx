@@ -59,8 +59,7 @@ export default function Home() {
             fontSize: 15,
           }}
         >
-          3D-ОБХОД · ПУСК НАСОСА{" "}
-          <span style={{ ...mono, fontSize: 10, color: "#f0685e" }}>ДЕМО</span>
+          3D-ОБХОД · ТРЕВОГИ ПО ТАБЛ. №12
         </Link>
         <div
           className="mt-6 p-3"
